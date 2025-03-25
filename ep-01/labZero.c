@@ -25,7 +25,7 @@ int main ()
 
   //============================ Calculo de Polinomio Lento ============================
 
-  printf("\n\nLENTO\n\n");
+  printf("\nLENTO\n");
 
   // Teste bisseccao
   int it;
@@ -49,25 +49,31 @@ int main ()
   t1 = timestamp() - t0;
   printf("bissec: %.15e %.15e %d %.8e\n", raiz, erro, it, t1);
 
-  /* Teste newtonRaphson
+  // Teste newtonRaphson
 
+  //Teste newtonRaphson
   //criterio de parada 1
   t0 = timestamp();
   erro = newtonRaphson_lento(pol, a, 1, &it, &raiz);
   t1 = timestamp() - t0;
-  printf("newton: raiz = %.15e, erro = %.15e, it = %d, tempo = %.8e\n", raiz, erro, it, t1);
+  printf("newton: %.15e %.15e %d %.8e\n", raiz, erro, it, t1);
 
   //criterio de parada 2
   t0 = timestamp();
   erro = newtonRaphson_lento(pol, a, 2, &it, &raiz);
   t1 = timestamp() - t0;
-  printf("newton: raiz = %.15e, erro = %.15e, it = %d, tempo = %.8e\n", raiz, erro, it, t1);
+  printf("newton: %.15e %.15e %d %.8e\n", raiz, erro, it, t1);
 
-  */
+  //criterio de parada 3
+  t0 = timestamp();
+  erro = newtonRaphson_lento(pol, a, 3, &it, &raiz);
+  t1 = timestamp() - t0;
+  printf("newton: %.15e %.15e %d %.8e\n", raiz, erro, it, t1);
+  
   //============================ Calculo de Polinomio Rápido ============================
 
 
-  printf("\n\nRAPIDO\n\n");
+  printf("\nRAPIDO\n");
   // Teste bisseccao
   
   //criterio de parada 1
@@ -88,25 +94,25 @@ int main ()
    t1 = timestamp() - t0;
    printf("bissec: %.15e %.15e %d %.8e\n", raiz, erro, it, t1);
 
-  /* Teste newtonRaphson
+  //Teste newtonRaphson
   //criterio de parada 1
   t0 = timestamp();
-  erro = newtonRaphson_lento(pol, a, EPS, &it, &raiz);
+  erro = newtonRaphson(pol, a, 1, &it, &raiz);
   t1 = timestamp() - t0;
-  printf("newton: raiz = %.15e, erro = %.15e, it = %d, tempo = %.8e\n", raiz, erro, it, t1);
+  printf("newton: %.15e %.15e %d %.8e\n", raiz, erro, it, t1);
 
   //criterio de parada 2
   t0 = timestamp();
-  erro = newtonRaphson_lento(pol, a, ULPS, &it, &raiz);
+  erro = newtonRaphson(pol, a, 2, &it, &raiz);
   t1 = timestamp() - t0;
-  printf("newton: raiz = %.15e, erro = %.15e, it = %d, tempo = %.8e\n", raiz, erro, it, t1);
+  printf("newton: %.15e %.15e %d %.8e\n", raiz, erro, it, t1);
 
   //criterio de parada 3
   t0 = timestamp();
-  erro = newtonRaphson_lento(pol, a, ZERO, &it, &raiz);
+  erro = newtonRaphson(pol, a, 3, &it, &raiz);
   t1 = timestamp() - t0;
-  printf("newton: raiz = %.15e, erro = %.15e, it = %d, tempo = %.8e\n", raiz, erro, it, t1);
-  */
+  printf("newton: %.15e %.15e %d %.8e\n", raiz, erro, it, t1);
+  
   free(pol.p);
   return 0;
 }

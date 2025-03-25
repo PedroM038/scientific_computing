@@ -10,16 +10,11 @@
 #include <math.h>
 
 int AlmostEqualUlps(Double_t a, Double_t b, int maxULPs) {
-    // Se um é negativo e outro é positivo, só podem ser iguais se forem +0.0 e -0.0
-    if (a.parts.sign != b.parts.sign) {
+   if (a.parts.sign != b.parts.sign) {
         return (a.f == 0.0 && b.f == 0.0); 
     }
-
-    // Calcula a diferença em ULPs corretamente
-    int64_t ulpsDiff = llabs(a.i - b.i);
-
-    // Verifica se a diferença está dentro do limite aceitável
-    return ulpsDiff <= maxULPs;
+   int64_t ulpsDiff = llabs(a.i - b.i);
+   return ulpsDiff <= maxULPs;
 }
 
 void calcPolinomio_rapido(Polinomio p, real_t x, real_t *px, real_t *dpx)
@@ -77,7 +72,7 @@ real_t bisseccao(Polinomio p, real_t xl, real_t xu, int criterioParada, int *it,
         xm_new = (xl + xu) / 2;
         calcPolinomio_rapido(p, xl, &fa, &dx);
         calcPolinomio_rapido(p, xm_new, &fb, &dx);
-        erro = fabs(xm_new - xm_old);
+        erro = fabs(xm_new - xm_old)/fabs(xm_new);
 
         if (fa * fb < 0) xu = xm_new;
         else if (fa * fb > 0) xl = xm_new;
@@ -123,7 +118,7 @@ real_t bisseccao_lento(Polinomio p, real_t xl, real_t xu, int criterioParada, in
         xm_new = (xl + xu) / 2;
         calcPolinomio_lento(p, xl, &fa, &dx);
         calcPolinomio_lento(p, xm_new, &fb, &dx);
-        erro = fabs(xm_new - xm_old);
+        erro = fabs(xm_new - xm_old)/fabs(xm_new);
 
         if (fa * fb < 0) xu = xm_new;
         else if (fa * fb > 0) xl = xm_new;
@@ -144,4 +139,72 @@ real_t bisseccao_lento(Polinomio p, real_t xl, real_t xu, int criterioParada, in
     return erro;
 }
 
+real_t newtonRaphson (Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz){
+    real_t x_old, x_new;
+    real_t f, df;
+    real_t erro;
 
+    x_old = 0.0;
+    x_new = x0;
+    erro = 0.0;
+    *it = 0;
+
+    do {
+        (*it)++;
+        x_old = x_new;
+        calcPolinomio_rapido(p, x_old, &f, &df);
+        if (df == 0) {
+            x_new = x_old;
+            break;
+        };
+        x_new = x_old - f/df;
+        erro = fabs(x_new - x_old);
+
+        Double_t a, b;
+        a.f = x_new;
+        b.f = x_old;
+
+        if (criterioParada == 1 && fabs(erro) < EPS) break;
+        if (criterioParada == 2 && fabs(f) <= ZERO) break;
+        if (criterioParada == 3 && AlmostEqualUlps(a, b, ULPS)) break;
+
+    } while (*it < MAXIT);
+
+    *raiz = x_new;
+    return erro;
+}
+
+real_t newtonRaphson_lento (Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz){
+    real_t x_old, x_new;
+    real_t f, df;
+    real_t erro;
+
+    x_old = 0.0;
+    x_new = x0;
+    erro = 0.0;
+    *it = 0;
+
+    do {
+        (*it)++;
+        x_old = x_new;
+        calcPolinomio_lento(p, x_old, &f, &df);
+        if (df == 0) {
+            x_new = x_old;
+            break;
+        };
+        x_new = x_old - f/df;
+        erro = fabs(x_new - x_old)/fabs(x_new);
+
+        Double_t a, b;
+        a.f = x_new;
+        b.f = x_old;
+
+        if (criterioParada == 1 && fabs(erro) < EPS) break;
+        if (criterioParada == 2 && fabs(f) <= ZERO) break;
+        if (criterioParada == 3 && AlmostEqualUlps(a, b, ULPS)) break;
+
+    } while (*it < MAXIT);
+
+    *raiz = x_new;
+    return erro;
+}
