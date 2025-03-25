@@ -1,179 +1,147 @@
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 #include "utils.h"
 #include "ZeroFuncao.h"
+#include "DoubleType.h"
 
-// Retorna valor do erro quando método finalizou. Este valor depende de tipoErro
-real_t newtonRaphson(Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz) {
-    real_t x_new = x0, x_old, erro, fx, dfx;
-    *it = 0;
+#include <stdint.h>
+#include <math.h>
 
-    do {
-        x_old = x_new;
-
-        // Calcula f(x) e f'(x)
-        calcPolinomio_rapido(p, x_old, &fx, &dfx);
-
-        // Verifica se a derivada é muito pequena (evita divisão por zero)
-        if (fabs(dfx) < ZERO) {
-            fprintf(stderr, "Erro: Derivada próxima de zero.\n");
-            return (real_t)-1;
-        }
-
-        // Atualiza x usando a fórmula de Newton-Raphson
-        x_new = x_old - fx / dfx;
-
-        // Calcula erro relativo
-        erro = fabs(x_new - x_old) / fabs(x_new);
-        (*it)++;
-    } while (erro > criterioParada && (*it) < MAXIT);
-
-    *raiz = x_new;
-    return erro;
-}
-
-// Retorna valor do erro quando método finalizou. Este valor depende de tipoErro
-real_t bisseccao (Polinomio p, real_t a, real_t b, int criterioParada, int *it, real_t *raiz)
-{
-    real_t xm_new, xm_old, erro, fa, fb, fxm;
-    real_t verificador;
-
-    calcPolinomio_rapido(p, a, &fa, NULL);
-    calcPolinomio_rapido(p, b, &fb, NULL);
-    *it = 0;
-
-    if (fa*fb > 0) {
-        fprintf(stderr, "Erro: f(a) e f(b) têm mesmo sinal\n");
-        return (real_t) -1;
-    } else {
-        do {
-            xm_old = xm_new;
-            xm_new = (a + b)/2;
-            calcPolinomio_rapido(p, xm_new, &fxm, NULL);
-            verificador = fa*fxm;
-            if (verificador < 0) {
-                b = xm_new;
-            } else if (verificador > 0) {
-                a = xm_new;
-                fa = fxm;
-            } else {
-                erro = 0.0;
-                break;
-            }
-            erro = fabs(xm_new - xm_old)/fabs(xm_new);
-            (*it)++;
-        } while (erro > criterioParada && (*it) < MAXIT);
+int AlmostEqualUlps(Double_t a, Double_t b, int maxULPs) {
+    // Se um é negativo e outro é positivo, só podem ser iguais se forem +0.0 e -0.0
+    if (a.parts.sign != b.parts.sign) {
+        return (a.f == 0.0 && b.f == 0.0); 
     }
-    *raiz = xm_new;
-    return erro;
-}
 
-real_t newtonRaphson_lento(Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz) {
-    real_t x_new = x0, x_old, erro, fx, dfx;
-    *it = 0;
+    // Calcula a diferença em ULPs corretamente
+    int64_t ulpsDiff = llabs(a.i - b.i);
 
-    do {
-        x_old = x_new;
-
-        // Calcula f(x) e f'(x)
-        calcPolinomio_lento(p, x_old, &fx, &dfx);
-
-        // Verifica se a derivada é muito pequena (evita divisão por zero)
-        if (fabs(dfx) < ZERO) {
-            fprintf(stderr, "Erro: Derivada próxima de zero.\n");
-            return (real_t)-1;
-        }
-
-        // Atualiza x usando a fórmula de Newton-Raphson
-        x_new = x_old - fx / dfx;
-
-        // Calcula erro relativo
-        erro = fabs(x_new - x_old) / fabs(x_new);
-        (*it)++;
-    } while (erro > criterioParada && (*it) < MAXIT);
-
-    *raiz = x_new;
-    return erro;
-}
-
-// Retorna valor do erro quando método finalizou. Este valor depende de tipoErro
-real_t bisseccao_lento (Polinomio p, real_t a, real_t b, int criterioParada, int *it, real_t *raiz)
-{
-    real_t xm_new, xm_old, erro, fa, fb, fxm;
-    real_t verificador;
-
-    calcPolinomio_lento(p, a, &fa, NULL);
-    calcPolinomio_lento(p, b, &fb, NULL);
-    *it = 0;
-
-    if (fa*fb > 0) {
-        fprintf(stderr, "Erro: f(a) e f(b) têm mesmo sinal\n");
-        return (real_t) -1;
-    } else {
-        do {
-            xm_old = xm_new;
-            xm_new = (a + b)/2;
-            calcPolinomio_lento(p, xm_new, &fxm, NULL);
-            verificador = fa*fxm;
-            if (verificador < 0) {
-                b = xm_new;
-            } else if (verificador > 0) {
-                a = xm_new;
-                fa = fxm;
-            } else {
-                erro = 0.0;
-                break;
-            }
-            erro = fabs(xm_new - xm_old)/fabs(xm_new);
-            (*it)++;
-        } while (erro > criterioParada && (*it) < MAXIT);
-    }
-    *raiz = xm_new;
-    return erro;
+    // Verifica se a diferença está dentro do limite aceitável
+    return ulpsDiff <= maxULPs;
 }
 
 void calcPolinomio_rapido(Polinomio p, real_t x, real_t *px, real_t *dpx)
 {
-    if (p.grau < 0) {
-        fprintf(stderr, "Erro: Polinômio de grau negativo\n");
-        return;
+    real_t b = 0;
+    real_t c = 0;
+    for (int i = p.grau; i > 0; i--) {
+        b = p.p[i] + x*b;
+        c = b + x*c;
     }
-
-    // Caso especial para polinômios de grau 0
-    *px = p.p[0];
-    if (p.grau == 0) {
-        if (dpx) *dpx = 0.0;
-        return;
-    }
-
-    // Aplicação do método de Horner para cálculo eficiente
-    real_t soma = p.p[p.grau];
-    real_t soma_derivada = (dpx) ? p.p[p.grau] * p.grau : 0.0;
-
-    for (int i = p.grau - 1; i >= 0; --i) {
-        soma = soma * x + p.p[i];
-        if (dpx && i > 0) {
-            soma_derivada = soma_derivada * x + p.p[i] * i;
-        }
-    }
-
-    *px = soma;
-    if (dpx) *dpx = soma_derivada;
+    b = b*x + p.p[0];
+    *px = b;
+    if (dpx) *dpx = c;
 }
 
 void calcPolinomio_lento(Polinomio p, real_t x, real_t *px, real_t *dpx)
 {
-    *px = 0.0;
-    if (dpx) *dpx = 0.0;
+    *px = 0;
+    if (dpx) *dpx = 0;
 
-    real_t pot_x = 1.0;  // Inicializa x^i com x^0 = 1
+    for (int i = 0; i <= p.grau; i++) {
+        *px += p.p[i] * pow(x, i);
+    }
 
-    for (int i = 0; i <= p.grau; ++i) {
-        *px += p.p[i] * pot_x;
-        if (dpx && i > 0) {
-            *dpx += p.p[i] * i * (pot_x / x);  // Usa divisão para evitar recalcular potências
+    if (dpx) {
+        for (int i = 1; i <= p.grau; i++) {
+            *dpx += i * p.p[i] * pow(x, i-1);
         }
-        pot_x *= x;  // Atualiza x^i iterativamente
     }
 }
+
+// Retorna valor do erro quando método finalizou. Este valor depende de tipoErro
+real_t bisseccao(Polinomio p, real_t xl, real_t xu, int criterioParada, int *it, real_t *raiz) {
+    real_t xm_old, xm_new;
+    real_t fa, fb, dx;
+    real_t erro;
+
+    fa = 0.0;
+    fb = 0.0;
+    dx = 0.0;
+    xm_old = 0.0;
+    erro = 0.0;
+    xm_new = (xl + xu) / 2;
+    *it = 0;
+
+    calcPolinomio_rapido(p, xl, &fa, &dx);
+    calcPolinomio_rapido(p, xm_new, &fb, &dx);
+    if (fa * fb < 0) xu = xm_new;
+    else if (fa * fb > 0) xl = xm_new;
+    else return xm_new;
+
+    do {
+        (*it)++;
+        xm_old = xm_new;
+        xm_new = (xl + xu) / 2;
+        calcPolinomio_rapido(p, xl, &fa, &dx);
+        calcPolinomio_rapido(p, xm_new, &fb, &dx);
+        erro = fabs(xm_new - xm_old);
+
+        if (fa * fb < 0) xu = xm_new;
+        else if (fa * fb > 0) xl = xm_new;
+
+        Double_t a, b;
+        a.f = xm_new;
+        b.f = xm_old;
+
+        if ((criterioParada == 1 && fabs(erro) < EPS) ||
+            (criterioParada == 2 && fabs(fb) <= ZERO) ||
+            (criterioParada == 3 && AlmostEqualUlps(a, b, ULPS))) {
+            break;
+        }
+
+    } while (*it < MAXIT);
+
+    *raiz = xm_new;
+    return erro;
+}
+
+real_t bisseccao_lento(Polinomio p, real_t xl, real_t xu, int criterioParada, int *it, real_t *raiz) {
+    real_t xm_old, xm_new;
+    real_t fa, fb, dx;
+    real_t erro;
+
+    fa = 0.0;
+    fb = 0.0;
+    dx = 0.0;
+    xm_old = 0.0;
+    erro = 0.0;
+    xm_new = (xl + xu) / 2;
+    *it = 0;
+
+    calcPolinomio_lento(p, xl, &fa, &dx);
+    calcPolinomio_lento(p, xm_new, &fb, &dx);
+    if (fa * fb < 0) xu = xm_new;
+    else if (fa * fb > 0) xl = xm_new;
+    else return xm_new;
+
+    do {
+        (*it)++;
+        xm_old = xm_new;
+        xm_new = (xl + xu) / 2;
+        calcPolinomio_lento(p, xl, &fa, &dx);
+        calcPolinomio_lento(p, xm_new, &fb, &dx);
+        erro = fabs(xm_new - xm_old);
+
+        if (fa * fb < 0) xu = xm_new;
+        else if (fa * fb > 0) xl = xm_new;
+
+        Double_t a, b;
+        a.f = xm_new;
+        b.f = xm_old;
+
+        if ((criterioParada == 1 && fabs(erro) < EPS) ||
+            (criterioParada == 2 && fabs(fb) <= ZERO) ||
+            (criterioParada == 3 && AlmostEqualUlps(a, b, ULPS))) {
+            break;
+        }
+
+    } while (*it < MAXIT);
+
+    *raiz = xm_new;
+    return erro;
+}
+
+
