@@ -1,32 +1,32 @@
-    CC     = gcc
+CC     = gcc
+CFLAGS = -O0 -Iincludes
+LFLAGS = -lm
 
-    CFLAGS = -O0
-    LFLAGS = -lm
+PROG   = labZero
+SRCS   = src/utils.c src/ZeroFuncao.c
+OBJS   = $(SRCS:.c=.o)
+MAIN   = labZero.o
 
-      PROG = labZero
-      OBJS = utils.o ZeroFuncao.o
-
-# Lista de arquivos para distribuição
-DISTFILES = *.c *.h Makefile polinomios.dat
-DISTDIR = ${USER}
+DISTFILES = src/*.c includes/*.h Makefile assets/polinomios.dat
+DISTDIR = labZero_dist
 
 .PHONY: clean purge distclean all
 
-%.o: %.c %.h DoubleType.h utils.h
-	$(CC) -c $(CFLAGS) $<
+%.o: %.c
+	$(CC) -c $(CFLAGS) $< -o $@
 
-$(PROG):  $(OBJS) $(PROG).o
+$(PROG): $(OBJS) $(MAIN)
 	$(CC) -o $@ $^ $(LFLAGS)
 
 clean:
-	@rm -f *~ *.bak
+	@rm -f *~ *.bak src/*~ includes/*~
 
-purge:   clean
-	@rm -f *.o core a.out
-	@rm -f $(PROG)
+purge: clean
+	@rm -f src/*.o *.o core a.out $(PROG)
 
 dist: purge
-	@echo "Gerando arquivo de distribuição ($(DISTDIR).tar) ..."
-	@ln -s . $(DISTDIR)
-	@tar -cvf $(DISTDIR).tar $(addprefix ./$(DISTDIR)/, $(DISTFILES))
-	@rm -f $(DISTDIR)
+	@echo "Gerando arquivo de distribuição ($(DISTDIR).tar.gz) ..."
+	@mkdir -p $(DISTDIR)
+	@cp -r $(DISTFILES) $(DISTDIR)/
+	@tar -czvf $(DISTDIR).tar.gz $(DISTDIR)
+	@rm -rf $(DISTDIR)

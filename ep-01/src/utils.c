@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-
-#include "utils.h"
+#include "../includes/utils.h"
 
 /*  Retorna tempo em milisegundos
 

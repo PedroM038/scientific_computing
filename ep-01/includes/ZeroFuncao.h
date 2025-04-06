@@ -2,6 +2,7 @@
 #define __ZEROFUNCAO_H__
 
 #include <float.h>
+#include "utils.h"
 
 // Aproximação aceitável como valor zero
 #define ZERO DBL_EPSILON
@@ -11,6 +12,9 @@
 #define EPS 1.0e-6
 #define ULPS 2
 
+#define LENTO 0
+#define RAPIDO 1
+
 typedef struct {
   real_t *p;
   int grau;
@@ -19,10 +23,8 @@ typedef struct {
 // Métodos
 // Retornam valor do erro quando método finalizou. Este valor depende de tipoErro
 
-real_t newtonRaphson (Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz);
-real_t bisseccao (Polinomio p, real_t a, real_t b, int criterioParada, int *it, real_t *raiz);
-real_t newtonRaphson_lento (Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz);
-real_t bisseccao_lento (Polinomio p, real_t a, real_t b, int criterioParada, int *it, real_t *raiz);
+real_t newtonRaphson (Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz, short int metodoPolinomio);
+real_t bisseccao (Polinomio p, real_t a, real_t b, int criterioParada, int *it, real_t *raiz, short int metodoPolinomio);
 
 // Cálculo de Polinômios
 void calcPolinomio_rapido(Polinomio p, real_t x, real_t *px, real_t *dpx );
