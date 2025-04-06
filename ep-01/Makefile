@@ -7,8 +7,8 @@ SRCS   = src/utils.c src/ZeroFuncao.c
 OBJS   = $(SRCS:.c=.o)
 MAIN   = labZero.o
 
-DISTFILES = src/*.c includes/*.h Makefile assets/polinomios.dat
-DISTDIR = labZero_dist
+DISTFILES = labZero.c src/*.c includes/*.h Makefile assets/polinomios.dat
+DISTDIR = 20235166
 
 .PHONY: clean purge distclean all
 
@@ -27,6 +27,6 @@ purge: clean
 dist: purge
 	@echo "Gerando arquivo de distribuição ($(DISTDIR).tar.gz) ..."
 	@mkdir -p $(DISTDIR)
-	@cp -r $(DISTFILES) $(DISTDIR)/
+	@rsync -R $(DISTFILES) $(DISTDIR)/
 	@tar -czvf $(DISTDIR).tar.gz $(DISTDIR)
 	@rm -rf $(DISTDIR)
